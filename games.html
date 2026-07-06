@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XO Game - ટિક ટેક ટો</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Core variables */
+        :root {
+            --bg-dark: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --border-color: rgba(15, 23, 42, 0.08);
+            --color-x: #ff3344;
+            --color-x-glow: rgba(255, 51, 68, 0.15);
+            --color-o: #22c55e;
+            --color-o-glow: rgba(34, 197, 94, 0.15);
+            --color-draw: #475569;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Space Grotesk', 'Outfit', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Cyberpunk Nebula Effect */
+        .bg-blur {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.12;
+            z-index: -1;
+            pointer-events: none;
+            animation: nebulaDrift 20s ease-in-out infinite alternate;
+        }
+
+        .blur-1 {
+            background-color: var(--color-x);
+            top: 5%;
+            left: 5%;
+        }
+
+        .blur-2 {
+            background-color: var(--color-o);
+            bottom: 5%;
+            right: 5%;
+            animation-delay: -10s;
+        }
+
+        @keyframes nebulaDrift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            50% {
+                transform: translate(50px, 30px) scale(1.15);
+            }
+            100% {
+                transform: translate(-30px, -50px) scale(0.9);
+            }
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 92%;
+            max-width: 420px;
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 28px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08), 
+                        inset 0 0 1px rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glow Border Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--color-x), var(--color-o));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(2, 132, 199, 0.15));
+        }
+
+        /* Sound Icon Button */
+        .icon-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Capsule Toggle Button Group */
+        .toggle-group {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 3px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text-main);
+        }
+
+        .toggle-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--color-x), var(--color-o));
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+            font-weight: 800;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .score-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-card .player-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-card .score-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        #scoreXCard { border-bottom: 3px solid var(--color-x); }
+        #scoreDrawCard { border-bottom: 3px solid var(--color-draw); }
+        #scoreOCard { border-bottom: 3px solid var(--color-o); }
+
+        #scoreXCard.active {
+            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.1);
+            background: rgba(255, 0, 85, 0.05);
+            border-color: rgba(255, 0, 85, 0.2);
+        }
+
+        #scoreOCard.active {
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.1);
+            background: rgba(2, 132, 199, 0.05);
+            border-color: rgba(2, 132, 199, 0.2);
+        }
+
+        /* Status Indicator */
+        .status-wrapper {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8),
+                        0 4px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .status {
+            font-size: 1rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            color: var(--color-x);
+            text-shadow: 0 1px 1px rgba(255, 0, 85, 0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .status.turn-o {
+            color: var(--color-o);
+            text-shadow: 0 1px 1px rgba(2, 132, 199, 0.15);
+        }
+
+        .status.draw {
+            color: var(--color-draw);
+            text-shadow: none;
+        }
+
+        /* Game Board */
+        .board-wrapper {
+            position: relative;
+            margin: 4px auto;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 12px;
+        }
+
+        /* Cells styling */
+        .cell {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Hover scales and subtle neon borders */
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+        }
+
+        .board.turn-x .cell:not(.X):not(.O):hover {
+            border-color: rgba(255, 0, 85, 0.3);
+        }
+
+        .board.turn-o .cell:not(.X):not(.O):hover {
+            border-color: rgba(2, 132, 199, 0.3);
+        }
+
+        .cell:active {
+            transform: scale(0.92) translateY(0);
+        }
+
+        /* Cell hover content */
+        .cell:not(.X):not(.O):hover::after {
+            font-size: 2.8rem;
+            font-weight: 800;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .board.turn-x .cell:not(.X):not(.O):hover::after {
+            content: "X";
+            opacity: 0.15;
+            color: var(--color-x);
+        }
+
+        .board.turn-o .cell:not(.X):not(.O):hover::after {
+            content: "O";
+            opacity: 0.15;
+            color: var(--color-o);
+        }
+
+        /* Actual X and O styles with intense neon glowing */
+        .cell.X {
+            color: var(--color-x);
+            text-shadow: 0 2px 4px rgba(255, 0, 85, 0.15);
+            animation: cellPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cell.O {
+            color: var(--color-o);
+            text-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);
+            animation: cellPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes cellPop {
+            0% {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Dynamic Win Line */
+        .win-line {
+            position: absolute;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-x), var(--color-o));
+            border-radius: 3px;
+            z-index: 10;
+            transform-origin: left center;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3), 0 0 20px rgba(2, 132, 199, 0.3);
+            width: 0;
+            opacity: 0;
+            transition: width 0.4s ease, opacity 0.2s ease;
+        }
+
+        .win-line.active {
+            opacity: 1;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 12px 18px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-x), var(--color-o));
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Confetti Canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 30px;
+            width: 90%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--color-x), var(--color-o));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modal-input-group label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-input-group input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #playerXNameInput:focus {
+            border-color: var(--color-x);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.1);
+        }
+
+        #playerONameInput:focus {
+            border-color: var(--color-o);
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.1);
+        }
+
+        /* Responsive UI */
+        @media (max-width: 400px) {
+            .container {
+                padding: 22px;
+            }
+            
+            .board {
+                grid-template-columns: repeat(3, 85px);
+                grid-template-rows: repeat(3, 85px);
+                gap: 10px;
+            }
+            
+            .cell {
+                font-size: 2.4rem;
+                border-radius: 14px;
+            }
+            
+            .cell:not(.X):not(.O):hover::after {
+                font-size: 2.4rem;
+            }
+            
+            h1 {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating background elements for aesthetics -->
+    <div class="bg-blur blur-1"></div>
+    <div class="bg-blur blur-2"></div>
+    
+    <div class="container">
+        <!-- Top bar with title and sound option -->
+        <div class="top-bar">
+            <h1>XO Game</h1>
+            <button id="soundToggle" class="icon-btn" title="અવાજ ચાલુ/બંધ">
+                <!-- Sound ON SVG -->
+                <svg id="soundOnIcon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.07,19.86 21,16.28 21,12C21,7.72 18.07,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
+                </svg>
+                <!-- Sound OFF SVG (hidden) -->
+                <svg id="soundOffIcon" viewBox="0 0 24 24" width="24" height="24" style="display: none;">
+                    <path fill="currentColor" d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.44 14,18.7V20.77C15.38,20.44 16.63,19.79 17.66,18.9L20.73,21.97L22,20.7L4.27,3M19,12C19,12.9 18.84,13.75 18.57,14.54L20.12,16.1C20.67,14.87 21,13.5 21,12C21,7.72 18.07,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.48,12.43 16.5,12.22 16.5,12Z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mode selector card -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <label>રમતનો પ્રકાર:</label>
+                <div class="toggle-group" id="modeSelector">
+                    <button class="toggle-btn" data-mode="pvp">👥 ૨ ખેલાડી</button>
+                    <button class="toggle-btn active" data-mode="pve">💻 કમ્પ્યુટર</button>
+                </div>
+            </div>
+            
+            <div class="control-group" id="difficultyGroup">
+                <label>મુશ્કેલી સ્તર:</label>
+                <div class="toggle-group" id="difficultySelector">
+                    <button class="toggle-btn" data-diff="easy">સરળ</button>
+                    <button class="toggle-btn" data-diff="medium">સામાન્ય</button>
+                    <button class="toggle-btn active" data-diff="impossible">અશક્ય</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard">
+            <div class="score-card" id="scoreXCard">
+                <span class="player-name">ખેલાડી X</span>
+                <span class="score-val" id="scoreX">0</span>
+            </div>
+            <div class="score-card" id="scoreDrawCard">
+                <span class="player-name">ડ્રો</span>
+                <span class="score-val" id="scoreDraw">0</span>
+            </div>
+            <div class="score-card" id="scoreOCard">
+                <span class="player-name" id="labelO">કમ્પ્યુટર</span>
+                <span class="score-val" id="scoreO">0</span>
+            </div>
+        </div>
+
+        <!-- Active player status -->
+        <div class="status-wrapper">
+            <div class="status" id="status">ખેલાડી X નો વારો</div>
+        </div>
+
+        <!-- Board Wrapper -->
+        <div class="board-wrapper">
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <!-- Dynamic winning line -->
+            <div class="win-line" id="winLine"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="resetBtn">ફરીથી રમો</button>
+            <button class="btn btn-secondary" id="resetScoresBtn">સ્કોર સાફ કરો</button>
+        </div>
+    </div>
+
+    <!-- Canvas for Confetti animation -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Name Input Modal -->
+    <div id="namesModal" class="modal">
+        <div class="modal-content">
+            <h2>ખેલાડીઓના નામ</h2>
+            <div class="modal-input-group">
+                <label for="playerXNameInput">ખેલાડી X નું નામ:</label>
+                <input type="text" id="playerXNameInput" placeholder="ખેલાડી X" maxlength="12">
+            </div>
+            <div class="modal-input-group">
+                <label for="playerONameInput">ખેલાડી O નું નામ:</label>
+                <input type="text" id="playerONameInput" placeholder="ખેલાડી O" maxlength="12">
+            </div>
+            <button class="btn btn-primary" id="saveNamesBtn">રમત શરૂ કરો</button>
+        </div>
+    </div>
+
+    <script>
+                const board = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const resetBtn = document.getElementById('resetBtn');
+        const resetScoresBtn = document.getElementById('resetScoresBtn');
+        const difficultyGroup = document.getElementById('difficultyGroup');
+        const scoreXElement = document.getElementById('scoreX');
+        const scoreDrawElement = document.getElementById('scoreDraw');
+        const scoreOElement = document.getElementById('scoreO');
+        const labelO = document.getElementById('labelO');
+        const soundToggle = document.getElementById('soundToggle');
+        const soundOnIcon = document.getElementById('soundOnIcon');
+        const soundOffIcon = document.getElementById('soundOffIcon');
+        const winLine = document.getElementById('winLine');
+        const scoreXCard = document.getElementById('scoreXCard');
+        const scoreOCard = document.getElementById('scoreOCard');
+        
+        // Modal DOM elements
+        const namesModal = document.getElementById('namesModal');
+        const playerXNameInput = document.getElementById('playerXNameInput');
+        const playerONameInput = document.getElementById('playerONameInput');
+        const saveNamesBtn = document.getElementById('saveNamesBtn');
+
+        // Game States
+        let currentPlayer = 'X';
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+        let isGameActive = true;
+        let isAiThinking = false;
+        let playerXName = "ખેલાડી X";
+        let playerOName = "ખેલાડી O";
+
+        // Winning Combinations
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontal
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Vertical
+            [0, 4, 8], [2, 4, 6]             // Diagonal
+        ];
+
+        // LocalStorage settings and scores
+        let scores = { X: 0, O: 0, Draw: 0 };
+        let isMuted = false;
+
+        // Active selectors getters
+        function getActiveMode() {
+            const activeBtn = document.querySelector('#modeSelector .toggle-btn.active');
+            return activeBtn ? activeBtn.getAttribute('data-mode') : 'pve';
+        }
+
+        function getActiveDifficulty() {
+            const activeBtn = document.querySelector('#difficultySelector .toggle-btn.active');
+            return activeBtn ? activeBtn.getAttribute('data-diff') : 'impossible';
+        }
+
+        // Initialize scores and settings from LocalStorage
+        function loadSettings() {
+            const savedScores = localStorage.getItem('xoGame_scores');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+            }
+            const savedMuted = localStorage.getItem('xoGame_muted');
+            if (savedMuted !== null) {
+                isMuted = JSON.parse(savedMuted);
+            }
+            const savedNameX = localStorage.getItem('xoGame_playerXName');
+            if (savedNameX) {
+                playerXName = savedNameX;
+            }
+            const savedNameO = localStorage.getItem('xoGame_playerOName');
+            if (savedNameO) {
+                playerOName = savedNameO;
+            }
+            updateScoreboardUI();
+            updateMuteUI();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('xoGame_scores', JSON.stringify(scores));
+            localStorage.setItem('xoGame_playerXName', playerXName);
+            localStorage.setItem('xoGame_playerOName', playerOName);
+        }
+
+        // -------------------------------------------------------------
+        // SOUND EFFECTS ENGINE (Web Audio API Synthesizer)
+        // -------------------------------------------------------------
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, volume = 0.1) {
+            if (isMuted) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn("Audio context not initialized yet", e);
+            }
+        }
+
+        function playClickSound() {
+            playTone(600, 'triangle', 0.1, 0.15);
+        }
+
+        function playWinSound() {
+            playTone(523.25, 'triangle', 0.1, 0.1); // C5
+            setTimeout(() => playTone(659.25, 'triangle', 0.1, 0.1), 80); // E5
+            setTimeout(() => playTone(783.99, 'triangle', 0.1, 0.1), 160); // G5
+            setTimeout(() => playTone(1046.50, 'triangle', 0.3, 0.15), 240); // C6
+        }
+
+        function playLossSound() {
+            playTone(392.00, 'sawtooth', 0.15, 0.08); // G4
+            setTimeout(() => playTone(349.23, 'sawtooth', 0.15, 0.08), 120); // F4
+            setTimeout(() => playTone(293.66, 'sawtooth', 0.35, 0.08), 240); // D4
+        }
+
+        function playDrawSound() {
+            playTone(440.00, 'sine', 0.15, 0.1); // A4
+            setTimeout(() => playTone(440.00, 'sine', 0.15, 0.1), 120); // A4
+            setTimeout(() => playTone(349.23, 'sine', 0.3, 0.1), 240); // F4
+        }
+
+        function playResetSound() {
+            playTone(523.25, 'sine', 0.05, 0.1);
+            setTimeout(() => playTone(783.99, 'sine', 0.08, 0.1), 50);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            localStorage.setItem('xoGame_muted', JSON.stringify(isMuted));
+            updateMuteUI();
+            playResetSound();
+        }
+
+        function updateMuteUI() {
+            if (isMuted) {
+                soundOnIcon.style.display = 'none';
+                soundOffIcon.style.display = 'block';
+            } else {
+                soundOnIcon.style.display = 'block';
+                soundOffIcon.style.display = 'none';
+            }
+        }
+
+        // -------------------------------------------------------------
+        // LIGHTWEIGHT CONFETTI ENGINE
+        // -------------------------------------------------------------
+        const canvas = document.getElementById('confettiCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let confettiAnimationId = null;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class ConfettiParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 8 + 6;
+                this.speedX = Math.random() * 14 - 7;
+                this.speedY = Math.random() * -16 - 6;
+                this.gravity = 0.35;
+                this.color = color;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 8 - 4;
+                this.opacity = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.speedY += this.gravity;
+                this.y += this.speedY;
+                this.rotation += this.rotationSpeed;
+                if (this.y > canvas.height) {
+                    this.opacity = 0;
+                } else {
+                    this.opacity -= 0.006;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function triggerConfetti() {
+            particles = [];
+            const colors = ['#ff3366', '#00f2fe', '#ffd200', '#4cd137', '#9c88ff'];
+            
+            // Spray from left side
+            for (let i = 0; i < 50; i++) {
+                particles.push(new ConfettiParticle(0, canvas.height * 0.85, colors[Math.floor(Math.random() * colors.length)]));
+            }
+            // Spray from right side
+            for (let i = 0; i < 50; i++) {
+                const p = new ConfettiParticle(canvas.width, canvas.height * 0.85, colors[Math.floor(Math.random() * colors.length)]);
+                p.speedX *= -1; // speed to the left
+                particles.push(p);
+            }
+            
+            if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.opacity > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            if (particles.length > 0) {
+                confettiAnimationId = requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // GAMEPLAY FLOW
+        // -------------------------------------------------------------
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedCellIndex] !== "" || !isGameActive || isAiThinking) {
+                return;
+            }
+
+            // Human player plays
+            playClickSound();
+            makeMove(clickedCell, clickedCellIndex);
+            
+            const gameFinished = checkResult();
+            
+            if (!gameFinished && getActiveMode() === 'pve') {
+                isAiThinking = true;
+                currentPlayer = 'O';
+                updateStatusUI();
+                
+                // Add a slight thinking delay for AI (makes game flow feel premium)
+                setTimeout(() => {
+                    if (!isGameActive) {
+                        isAiThinking = false;
+                        return;
+                    }
+                    aiPlay();
+                    isAiThinking = false;
+                }, 550);
+            }
+        }
+
+        function makeMove(cell, index) {
+            gameState[index] = currentPlayer;
+            cell.innerText = currentPlayer;
+            cell.classList.add(currentPlayer);
+        }
+
+        function aiPlay() {
+            let bestMove;
+            const diff = getActiveDifficulty();
+
+            if (diff === 'easy') {
+                bestMove = getRandomMove();
+            } else if (diff === 'medium') {
+                bestMove = getMediumMove();
+            } else {
+                bestMove = getImpossibleMove();
+            }
+
+            if (bestMove !== -1) {
+                const cell = cells[bestMove];
+                makeMove(cell, bestMove);
+                playTone(550, 'triangle', 0.1, 0.12);
+                checkResult();
+            }
+        }
+
+        // AI Algorithms
+        function getRandomMove() {
+            const emptyIndices = gameState.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
+            if (emptyIndices.length === 0) return -1;
+            return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        }
+
+        function getMediumMove() {
+            // 1. Check if AI can win immediately
+            for (let combo of winningConditions) {
+                const [a, b, c] = combo;
+                if (gameState[a] === 'O' && gameState[b] === 'O' && gameState[c] === '') return c;
+                if (gameState[a] === 'O' && gameState[c] === 'O' && gameState[b] === '') return b;
+                if (gameState[b] === 'O' && gameState[c] === 'O' && gameState[a] === '') return a;
+            }
+
+            // 2. Check if player X can win immediately and block it
+            for (let combo of winningConditions) {
+                const [a, b, c] = combo;
+                if (gameState[a] === 'X' && gameState[b] === 'X' && gameState[c] === '') return c;
+                if (gameState[a] === 'X' && gameState[c] === 'X' && gameState[b] === '') return b;
+                if (gameState[b] === 'X' && gameState[c] === 'X' && gameState[a] === '') return a;
+            }
+
+            // 3. Fallback to random
+            return getRandomMove();
+        }
+
+        function getImpossibleMove() {
+            let bestScore = -Infinity;
+            let move = -1;
+            
+            // We try each open cell and run minimax
+            for (let i = 0; i < 9; i++) {
+                if (gameState[i] === "") {
+                    gameState[i] = "O";
+                    let score = minimax(gameState, 0, false);
+                    gameState[i] = "";
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+            return move;
+        }
+
+        // Minimax algorithm helper
+        function minimax(tempState, depth, isMaximizing) {
+            if (checkWinningState(tempState, 'O')) return 10 - depth;
+            if (checkWinningState(tempState, 'X')) return depth - 10;
+            if (!tempState.includes("")) return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (tempState[i] === "") {
+                        tempState[i] = "O";
+                        let score = minimax(tempState, depth + 1, false);
+                        tempState[i] = "";
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (tempState[i] === "") {
+                        tempState[i] = "X";
+                        let score = minimax(tempState, depth + 1, true);
+                        tempState[i] = "";
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+        function checkWinningState(tempState, player) {
+            return winningConditions.some(combo => {
+                return combo.every(idx => tempState[idx] === player);
+            });
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            let winningCombo = null;
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const combo = winningConditions[i];
+                let a = gameState[combo[0]];
+                let b = gameState[combo[1]];
+                let c = gameState[combo[2]];
+
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    winningCombo = combo;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                isGameActive = false;
+                drawWinningLine(winningCombo);
+                
+                const isComputerWin = (currentPlayer === 'O' && getActiveMode() === 'pve');
+                
+                if (currentPlayer === 'X') {
+                    scores.X++;
+                    statusText.innerHTML = `🎉 ${playerXName} જીતી ગયો! નવી રમત શરૂ થાય છે...`;
+                    statusText.className = "status"; // default color X
+                    playWinSound();
+                    triggerConfetti();
+                } else {
+                    scores.O++;
+                    if (getActiveMode() === 'pve') {
+                        statusText.innerHTML = `💻 કમ્પ્યુટર જીતી ગયું! નવી રમત શરૂ થાય છે...`;
+                        playLossSound();
+                    } else {
+                        statusText.innerHTML = `🎉 ${playerOName} જીતી ગયો! નવી રમત શરૂ થાય છે...`;
+                        playWinSound();
+                        triggerConfetti();
+                    }
+                    statusText.className = "status turn-o";
+                }
+                
+                saveSettings();
+                updateScoreboardUI();
+                removeGlows();
+                
+                // Auto-restart after 2.2 seconds on win (gives time to see winning line + confetti)
+                setTimeout(() => {
+                    if (!isGameActive) {
+                        resetGame(true); // silent restart
+                    }
+                }, 2200);
+                
+                return true;
+            }
+
+            // Match Draw
+            let roundDraw = !gameState.includes("");
+            if (roundDraw) {
+                scores.Draw++;
+                statusText.innerHTML = "🤝 ડ્રો! નવી રમત શરૂ થાય છે...";
+                statusText.className = "status draw";
+                isGameActive = false;
+                playDrawSound();
+                saveSettings();
+                updateScoreboardUI();
+                removeGlows();
+                
+                // Auto-restart after 1.8 seconds on draw
+                setTimeout(() => {
+                    if (!isGameActive) {
+                        resetGame(true); // silent restart
+                    }
+                }, 1800);
+                
+                return true;
+            }
+
+            // Shift Turn
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            updateStatusUI();
+            return false;
+        }
+
+        function drawWinningLine(combination) {
+            const [idx1, idx2, idx3] = combination;
+            const cell1 = cells[idx1];
+            const cell3 = cells[idx3];
+            
+            const rect1 = cell1.getBoundingClientRect();
+            const rect3 = cell3.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+            
+            // Calculate center coordinates relative to the board
+            const x1 = rect1.left + rect1.width / 2 - boardRect.left;
+            const y1 = rect1.top + rect1.height / 2 - boardRect.top;
+            const x2 = rect3.left + rect3.width / 2 - boardRect.left;
+            const y2 = rect3.top + rect3.height / 2 - boardRect.top;
+            
+            // Distance and Angle
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            
+            // Position the overlay
+            winLine.style.width = `${distance}px`;
+            winLine.style.left = `${x1}px`;
+            winLine.style.top = `${y1}px`;
+            winLine.style.transform = `rotate(${angle}deg)`;
+            winLine.classList.add('active');
+        }
+
+        function updateStatusUI() {
+            if (currentPlayer === 'X') {
+                statusText.innerHTML = `${playerXName} નો વારો`;
+                statusText.className = "status";
+                board.className = "board turn-x";
+                scoreXCard.classList.add('active');
+                scoreOCard.classList.remove('active');
+            } else {
+                if (getActiveMode() === 'pve') {
+                    statusText.innerHTML = `💻 કમ્પ્યુટર વિચારે છે...`;
+                } else {
+                    statusText.innerHTML = `${playerOName} નો વારો`;
+                }
+                statusText.className = "status turn-o";
+                board.className = "board turn-o";
+                scoreOCard.classList.add('active');
+                scoreXCard.classList.remove('active');
+            }
+        }
+
+        function removeGlows() {
+            scoreXCard.classList.remove('active');
+            scoreOCard.classList.remove('active');
+        }
+
+        function updateScoreboardUI() {
+            scoreXElement.innerText = scores.X;
+            scoreDrawElement.innerText = scores.Draw;
+            scoreOElement.innerText = scores.O;
+            
+            // Set name labels dynamically on scoreboard cards
+            if (getActiveMode() === 'pvp') {
+                document.querySelector('#scoreXCard .player-name').innerText = playerXName;
+                document.querySelector('#scoreOCard .player-name').innerText = playerOName;
+            } else {
+                document.querySelector('#scoreXCard .player-name').innerText = playerXName;
+                document.querySelector('#scoreOCard .player-name').innerText = "કમ્પ્યુટર";
+            }
+        }
+
+        function resetGame(silent = false) {
+            if (!silent) playResetSound();
+            currentPlayer = 'X';
+            gameState = ["", "", "", "", "", "", "", "", ""];
+            isGameActive = true;
+            isAiThinking = false;
+            
+            // Remove winning line
+            winLine.classList.remove('active');
+            winLine.style.width = '0';
+            
+            // Clear board cells
+            cells.forEach(cell => {
+                cell.innerText = "";
+                cell.className = "cell";
+            });
+            
+            updateStatusUI();
+        }
+
+        function resetScores() {
+            playResetSound();
+            scores = { X: 0, O: 0, Draw: 0 };
+            saveSettings();
+            updateScoreboardUI();
+            resetGame(true);
+        }
+
+        function handleModeChange(silent = false) {
+            if (!silent) playResetSound();
+            if (getActiveMode() === 'pve') {
+                difficultyGroup.style.display = 'flex';
+                labelO.innerText = "કમ્પ્યુટર";
+                playerOName = "કમ્પ્યુટર";
+                
+                // Restore X name
+                const savedNameX = localStorage.getItem('xoGame_playerXName');
+                playerXName = savedNameX ? savedNameX : "ખેલાડી X";
+                document.querySelector('#scoreXCard .player-name').innerText = playerXName;
+                
+                resetGame(true);
+            } else {
+                difficultyGroup.style.display = 'none';
+                
+                if (!silent) {
+                    // Open names modal
+                    namesModal.classList.add('show');
+                    
+                    const savedNameX = localStorage.getItem('xoGame_playerXName');
+                    const savedNameO = localStorage.getItem('xoGame_playerOName');
+                    playerXName = savedNameX ? savedNameX : "ખેલાડી X";
+                    playerOName = savedNameO ? savedNameO : "ખેલાડી O";
+                    
+                    playerXNameInput.value = playerXName === "ખેલાડી X" ? "" : playerXName;
+                    playerONameInput.value = playerOName === "ખેલાડી O" ? "" : playerOName;
+                    
+                    playerXNameInput.focus();
+                } else {
+                    // Silent load configuration
+                    const savedNameX = localStorage.getItem('xoGame_playerXName');
+                    const savedNameO = localStorage.getItem('xoGame_playerOName');
+                    playerXName = savedNameX ? savedNameX : "ખેલાડી X";
+                    playerOName = savedNameO ? savedNameO : "ખેલાડી O";
+                    
+                    document.querySelector('#scoreXCard .player-name').innerText = playerXName;
+                    labelO.innerText = playerOName;
+                    
+                    resetGame(true);
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // EVENT LISTENERS
+        // -------------------------------------------------------------
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetBtn.addEventListener('click', () => resetGame());
+        resetScoresBtn.addEventListener('click', resetScores);
+
+        // Mode Selector button clicks
+        const modeButtons = document.querySelectorAll('#modeSelector .toggle-btn');
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                handleModeChange();
+            });
+        });
+
+        // Difficulty Selector button clicks
+        const diffButtons = document.querySelectorAll('#difficultySelector .toggle-btn');
+        diffButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                playResetSound();
+                resetGame(true);
+            });
+        });
+
+        // Modal Save Button Click
+        saveNamesBtn.addEventListener('click', () => {
+            const xVal = playerXNameInput.value.trim();
+            const oVal = playerONameInput.value.trim();
+            
+            playerXName = xVal !== "" ? xVal : "ખેલાડી X";
+            playerOName = oVal !== "" ? oVal : "ખેલાડી O";
+            
+            saveSettings();
+            updateScoreboardUI();
+            
+            namesModal.classList.remove('show');
+            playResetSound();
+            resetGame(true);
+        });
+
+        soundToggle.addEventListener('click', toggleMute);
+
+        // Initialize application state
+        loadSettings();
+        handleModeChange(true); // set initial mode UI visibility silently
+    </script>
+</body>
+</html>
